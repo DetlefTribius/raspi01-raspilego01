@@ -74,7 +74,7 @@ public class Data implements Comparable<Data>
     /**
      * SCALE_OUTPUT = 3 - Genauigkeit der Sollwertvorgabe (3 Nachkommastellen)
      * <p>
-     * vgl. auch Angabe in Model <code>MX_VALUE_SCALE = 2</code>
+     * vgl. auch Angabe in Model <code>SCALE_MX_VALUE = 2</code>
      * </p>
      */
     public final static int SCALE_OUTPUT = 3;

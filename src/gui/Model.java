@@ -92,7 +92,8 @@ public class Model
     private long counter = 0L;
     
     /**
-     * 
+     * cycleTime - Zykluszeit (Taktzeit der Beauftragung durch den Arduino), 
+     * wird durch Differenzbildung (vgl. this.past) ermittelt...
      */
     private BigDecimal cycleTime = BigDecimal.ZERO;
     
@@ -290,9 +291,9 @@ public class Model
     public final static int SCALE_INTERN = 6;
     
     /**
-     * CONST - Parameter, ergibt sich aus 60/(Impulsanzahl pro Umdrehung) zur weiteren verwendung...
+     * RPM_CONST - Parameter, ergibt sich aus (Impulsanzahl pro Umdrehung)/(60L) zur weiteren verwendung...
      */
-    public final static BigDecimal CONST = BigDecimal.valueOf(60L).divide(BigDecimal.valueOf(CIRCUMFERENCE), SCALE_INTERN, BigDecimal.ROUND_HALF_UP);
+    public final static BigDecimal RPM_CONST = BigDecimal.valueOf(CIRCUMFERENCE).divide(BigDecimal.valueOf(60L), SCALE_INTERN, BigDecimal.ROUND_DOWN);
 
     /**
      * positionController - Referenz auf den Regler...
@@ -463,36 +464,36 @@ public class Model
     };
     
     /**
-     * MX_VALUE_SCALE = 2 - Genauigkeit der Sollwertvorgabe (2 Nachkommastellen)
+     * SCALE_MX_VALUE = 2 - Genauigkeit der Sollwertvorgabe (2 Nachkommastellen)
      */
-    public final static int MX_VALUE_SCALE = 2;
+    public final static int SCALE_MX_VALUE = 2;
     
     /**
      * MX_VALUES - Vorgaben fuer die ComboBoxen VALUE_MA_KEY, VALUE_MB_KEY
      */
     public final static BigDecimal[] MX_VALUES = new BigDecimal[]
     {
-        BigDecimal.valueOf(1.0).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.9).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.8).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.7).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.6).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.5).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.4).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.3).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.2).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.1).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(0.0).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.1).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.2).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.3).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.4).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.5).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.6).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.7).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.8).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),                    
-        BigDecimal.valueOf(-0.9).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(-1.0).setScale(MX_VALUE_SCALE, BigDecimal.ROUND_HALF_UP)                    
+        BigDecimal.valueOf(1.0).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.9).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.8).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.7).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.6).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.5).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.4).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.3).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.2).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.1).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(0.0).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.1).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.2).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.3).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.4).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.5).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.6).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.7).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.8).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),                    
+        BigDecimal.valueOf(-0.9).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(-1.0).setScale(SCALE_MX_VALUE, BigDecimal.ROUND_HALF_UP)                    
     };
     
     /**
@@ -501,9 +502,9 @@ public class Model
     public final static int SELECTED_MX_VALUES_INDEX = 10;
     
     /**
-     * Genauigkeit (Anzahl der Nachkommastellen) in der Verstaerkungsangabe
+     * SCALE_ENHANCEMENT = 4 - Genauigkeit (Anzahl der Nachkommastellen) in der Verstaerkungsangabe
      */
-    public final static int  ENHANCEMENT_SCALE = 4;
+    public final static int  SCALE_ENHANCEMENT = 4;
     
     /**
      * ENHANCEMENTS - Array mit den Verstaerkungswerten des Reglers (P-Anteil) 
@@ -511,17 +512,17 @@ public class Model
      */
     public final static BigDecimal[] ENHANCEMENTS = new BigDecimal[]
     {
-        BigDecimal.valueOf(0.000).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.002).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.005).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.010).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.020).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.050).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.100).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.200).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.300).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(0.500).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(1.000).setScale(ENHANCEMENT_SCALE, BigDecimal.ROUND_HALF_UP)
+        BigDecimal.valueOf(0.000).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.002).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.005).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.010).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.020).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.050).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.100).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.200).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.300).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.500).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.000).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP)
     };
     
     /**
@@ -1121,10 +1122,10 @@ public class Model
         this.totalMA[1] = 0L;
         this.totalMB[0] = 0L;
         this.totalMB[1] = 0L;
-        this.controlMA[0] = BigDecimal.ZERO.setScale(MX_VALUE_SCALE);
-        this.controlMA[1] = BigDecimal.ZERO.setScale(MX_VALUE_SCALE);
-        this.controlMB[0] = BigDecimal.ZERO.setScale(MX_VALUE_SCALE);
-        this.controlMB[1] = BigDecimal.ZERO.setScale(MX_VALUE_SCALE);
+        this.controlMA[0] = BigDecimal.ZERO.setScale(SCALE_MX_VALUE);
+        this.controlMA[1] = BigDecimal.ZERO.setScale(SCALE_MX_VALUE);
+        this.controlMB[0] = BigDecimal.ZERO.setScale(SCALE_MX_VALUE);
+        this.controlMB[1] = BigDecimal.ZERO.setScale(SCALE_MX_VALUE);
         this.outputMA = BigDecimal.ZERO.setScale(SCALE_OUTPUT);
         this.outputMB = BigDecimal.ZERO.setScale(SCALE_OUTPUT);
     }
