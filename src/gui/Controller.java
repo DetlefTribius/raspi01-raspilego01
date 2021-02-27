@@ -64,6 +64,8 @@ public class Controller implements ActionListener
         this.view.addActionListener(this);
         this.model = model;
         this.model.addPropertyChangeListener(this.view);
+        this.model.setProperty(Model.CONTROL_MA_KEY, Boolean.TRUE);
+        this.model.setProperty(Model.CONTROL_MB_KEY, Boolean.TRUE);
     }
     
     /**

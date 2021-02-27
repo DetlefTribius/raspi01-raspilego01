@@ -76,6 +76,11 @@ public class SwingWindow extends JFrame implements View
      * checkBoxMap - nimmt die Controls vom Typ JCheckBox auf...
      */
     private final java.util.Map<String, JCheckBox> checkBoxMap = new java.util.TreeMap<>();
+  
+    /**
+     * isDestinationSimultan - boolsche Kennung, die Sollwerte werden simultan gesetzt...
+     */
+    private boolean isDestinationSimultan = false;
     
     /**
      * TEXT_FIELD - Kennung fuer ein Textfeld...
@@ -97,17 +102,20 @@ public class SwingWindow extends JFrame implements View
      */
     public final static String[][] controlData = new String[][]
     {
-        {TEXT_FIELD,    Data.COUNTER_KEY,       "Counter"             },        
-        {TEXT_FIELD,    Data.CYCLE_TIME_KEY,    "Zyklusdauer (in s)"  },
-        {TEXT_FIELD,    Data.TOKEN_KEY,         "Token"               },
-        {COMBO_BOX,     Model.VALUE_MA_KEY,     "Sollwert Motor A"    },
-        {COMBO_BOX,     Model.VALUE_MB_KEY,     "Sollwert Motor B"    },
-        {TEXT_FIELD,    Data.NUMBER_MA_KEY,     "Position Motor A"    },
-        {TEXT_FIELD,    Data.NUMBER_MB_KEY,     "Position Motor B"    },
-        {TEXT_FIELD,    Data.OUTPUT_MA_KEY,     "Stellgroesse Motor A"},
-        {TEXT_FIELD,    Data.OUTPUT_MB_KEY,     "Stellgroesse Motor B"},
-        {CHECK_BOX,     Model.CONTROL_KEY,      "Mit Regelung?"       },
-        {COMBO_BOX,     Model.ENHANCEMENT_KEY,  "Verstärkung"         }
+        {TEXT_FIELD,    Data.COUNTER_KEY,               "Counter"             },        
+        {TEXT_FIELD,    Data.CYCLE_TIME_KEY,            "Zyklusdauer (in s)"  },
+        {TEXT_FIELD,    Data.TOKEN_KEY,                 "Token"               },
+        {CHECK_BOX,     Model.DESTINATION_SIMULTAN_KEY, "Sollwerte Motor A/B simultan?" },
+        {COMBO_BOX,     Model.VALUE_MA_KEY,             "Sollwert Motor A"    },
+        {COMBO_BOX,     Model.VALUE_MB_KEY,             "Sollwert Motor B"    },
+        {TEXT_FIELD,    Data.NUMBER_MA_KEY,             "Position Motor A"    },
+        {TEXT_FIELD,    Data.NUMBER_MB_KEY,             "Position Motor B"    },
+        {CHECK_BOX,     Model.CONTROL_MA_KEY,           "Reglerausgang auf Motor A?"},
+        {TEXT_FIELD,    Data.OUTPUT_MA_KEY,             "Stellgroesse Motor A"},
+        {CHECK_BOX,     Model.CONTROL_MB_KEY,           "Reglerausgang auf Motor B?"},
+        {TEXT_FIELD,    Data.OUTPUT_MB_KEY,             "Stellgroesse Motor B"},
+        {CHECK_BOX,     Model.CONTROL_KEY,              "Mit Regelung?"       },
+        {COMBO_BOX,     Model.ENHANCEMENT_KEY,          "Verstärkung"         }
     };
     
     /**
@@ -179,7 +187,7 @@ public class SwingWindow extends JFrame implements View
     {
         this.setSize(450, 250);
         this.setContentPane(getJContentPane());
-        this.setTitle( "Raspberry Pi - Lego-Motor A/B" );
+        this.setTitle( "Schwebe-Regelung-Motor A/B" );
         this.startButton.setName(Model.NAME_START_BUTTON);
         this.stopButton.setName(Model.NAME_STOP_BUTTON);
         this.resetButton.setName(Model.NAME_RESET_BUTTON);
@@ -313,7 +321,10 @@ public class SwingWindow extends JFrame implements View
                             });
                         }
                         
-                        if (CHECK_BOX.equals(controlType) && Model.CONTROL_KEY.equals(controlId))
+                        if (CHECK_BOX.equals(controlType) && Model.CONTROL_KEY.equals(controlId)
+                         || CHECK_BOX.equals(controlType) && Model.DESTINATION_SIMULTAN_KEY.equals(controlId)
+                         || CHECK_BOX.equals(controlType) && Model.CONTROL_MA_KEY.equals(controlId)
+                         || CHECK_BOX.equals(controlType) && Model.CONTROL_MB_KEY.equals(controlId))                                
                         {
                             JCheckBox controlCheckBox = new JCheckBox();
                             controlCheckBox.setName(controlId);
@@ -433,11 +444,50 @@ public class SwingWindow extends JFrame implements View
                 logger.debug(propertyName + ": " + newValue);
             }
         }
+        if (this.isDestinationSimultan && Model.VALUE_MA_KEY.equals(propertyName))
+        {
+            if (this.comboBoxMap.containsKey(propertyName))
+            {
+                JComboBox<BigDecimal> valueComboBox = this.comboBoxMap.get(propertyName);
+                final int index = valueComboBox.getSelectedIndex();
+                JComboBox<BigDecimal> otherComboBox = this.comboBoxMap.get(Model.VALUE_MB_KEY);
+                otherComboBox.setSelectedIndex(index);
+            }
+        }
+        if (this.isDestinationSimultan && Model.VALUE_MB_KEY.equals(propertyName))
+        {
+            if (this.comboBoxMap.containsKey(propertyName))
+            {
+                JComboBox<BigDecimal> valueComboBox = this.comboBoxMap.get(propertyName);
+                final int index = valueComboBox.getSelectedIndex();
+                JComboBox<BigDecimal> otherComboBox = this.comboBoxMap.get(Model.VALUE_MA_KEY);
+                otherComboBox.setSelectedIndex(index);
+            }
+        }
         
-        if (Model.CONTROL_KEY.equals(propertyName))
+        if (Model.DESTINATION_SIMULTAN_KEY.equals(propertyName)
+         || Model.CONTROL_KEY.equals(propertyName))
         {
             final boolean isSelected = Boolean.TRUE.equals(newValue);
             
+            if (this.checkBoxMap.containsKey(propertyName))
+            {
+                JCheckBox checkBox = this.checkBoxMap.get(propertyName);
+                checkBox.setSelected(isSelected);
+                logger.debug(propertyName + ": " + (isSelected? "selected" : "deselected"));
+            }
+            // Hier Zustandsgroesse this.isDestinationSimultan zur  
+            // GUI-Steuerung (Sonderloesung Sollwerte synchronisieren) ablegen...
+            if (Model.DESTINATION_SIMULTAN_KEY.equals(propertyName))
+            {
+                this.isDestinationSimultan = isSelected;
+            }
+        }
+        
+        if (Model.CONTROL_MA_KEY.equals(propertyName)
+         || Model.CONTROL_MB_KEY.equals(propertyName))
+        {
+            final boolean isSelected = Boolean.TRUE.equals(newValue);
             if (this.checkBoxMap.containsKey(propertyName))
             {
                 JCheckBox checkBox = this.checkBoxMap.get(propertyName);

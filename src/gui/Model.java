@@ -45,6 +45,7 @@ import raspi.hardware.i2c.MotorDriverHAT;
  * </p>
  * <p>
  * <ul>
+ *  <li>isRaspi: Hilfsgroesse um die Lauf- und Testfaehigkeit in Nicht-Raspi-Umgebungen zu ermoeglichen</li>
  *  <li>Zaehler counter</li>
  *  <li>Taktdauer cycleTime</li>
  * </ul>
@@ -233,7 +234,18 @@ public class Model
     private final MotorDriverHAT motorDriverHAT;
     
     /**
-     * valueMA - Sollwert (Pwm-Vorgabe) Motor A, wird durch die GUI vorgegeben
+     * DESTINATION_SIMULTAN_KEY = "destinationSimultanKey"
+     */
+    public final static String DESTINATION_SIMULTAN_KEY = "destinationSimultanKey";
+
+    /**
+     * boolean isDestinationSimultan - Sollwerte Motor A/B werden simultan gehalten...
+     */
+    private boolean isDestinationSimultan = false;
+    
+    /**
+     * valueMA - Sollwert (Pwm-Vorgabe) Motor A, wird durch die GUI vorgegeben 
+     * (Combobox Sollwert Motor A)
      * <p>
      * Bereich valueMA (Sollwert): -1.0 ... 0.0 ... +1.0
      * </p>
@@ -242,6 +254,7 @@ public class Model
     
     /**
      * valueMB - Sollwert (Pwm-Vorgabe) Motor B, wird durch die GUI vorgegeben
+     * (Combobox Sollwert Motor B)
      * <p>
      * Bereich valueMB (Sollwert): -1.0 ... 0.0 ... +1.0
      * </p>
@@ -249,9 +262,24 @@ public class Model
     private BigDecimal valueMB = BigDecimal.ZERO;
     
     /**
-     * boolean isControlled - boolsche Kennung: Regelung ja/nein...
+     * boolean isControlled - boolsche Kennung: Regelung ja/nein...,
+     * wird an der GUI gesetzt (Checkbox Mit Regelung?) 
      */
     private boolean isControlled = false;
+    
+    /**
+     * boolean isMAControlled - boolsche Kennung: Regelung wirkt auf
+     * Motor A, wird an der GUI in der Checkbox (Reglerausgang auf Motor A?) 
+     * gesetzt
+     */
+    private boolean isMAControlled = false;
+
+    /**
+     * boolean isMBControlled - boolsche Kennung: Regelung wirkt auf
+     * Motor B, wird an der GUI in der Checkbox (Reglerausgang auf Motor B?) 
+     * gesetzt
+     */
+    private boolean isMBControlled = false;
     
     /**
      * outputMA - Stellgroesse Motor A
@@ -436,6 +464,18 @@ public class Model
      * CONTROL_KEY = "controlKey" - Boolscher Schalter 'Mit Regelung'
      */
     public final static String CONTROL_KEY = "controlKey";
+    
+    /**
+     * CONTROL_MA_KEY = "controlMAKey" - Key fuer den Boolschen Schalter, 
+     * Reglerausgang auf Motor A
+     */
+    public final static String CONTROL_MA_KEY = "controlMAKey";
+    
+    /**
+     * CONTROL_MB_KEY = "controlMBKey" - Key fuer den Boolschen Schalter, 
+     * Reglerausgang auf Motor B
+     */
+    public final static String CONTROL_MB_KEY = "controlMBKey";
 
     /**
      * ENHANCEMENT_KEY = "enhancementKey" - Combobox mit den Reglerverstaerkungen...
@@ -454,11 +494,14 @@ public class Model
     private final static String[] DATA_KEYS = 
     {
         DATA_KEY,
+        DESTINATION_SIMULTAN_KEY,
         VALUE_MA_KEY,
         VALUE_MB_KEY,
         OUTPUT_MA_KEY,
         OUTPUT_MB_KEY,
         CONTROL_KEY,
+        CONTROL_MA_KEY,
+        CONTROL_MB_KEY,
         ENHANCEMENT_KEY,
         GUI_STATUS_KEY
     };
@@ -509,20 +552,34 @@ public class Model
     /**
      * ENHANCEMENTS - Array mit den Verstaerkungswerten des Reglers (P-Anteil) 
      * zur Auswahl in der Combobox...
+     * <p>
+     * Der fuer die Regelung relevante Wert ergibt sich aus einer Division der Verstaerkung
+     * durch die Anzahl der Impulse pro Umdrehung, um diese Impulsanzahl nicht in die Verstaerkung
+     * einfliessen zu lassen.
+     * </p>
      */
     public final static BigDecimal[] ENHANCEMENTS = new BigDecimal[]
     {
         BigDecimal.valueOf(0.000).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.002).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.003).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.005).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.007).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.010).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.020).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.030).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.050).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(0.070).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.100).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.200).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.300).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
         BigDecimal.valueOf(0.500).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
-        BigDecimal.valueOf(1.000).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP)
+        BigDecimal.valueOf(0.700).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.000).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.100).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.200).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.300).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP),
+        BigDecimal.valueOf(1.500).setScale(SCALE_ENHANCEMENT, BigDecimal.ROUND_HALF_UP)
     };
     
     /**
@@ -847,7 +904,10 @@ public class Model
         //////////////////////////////////////////////////////////////////////////
         
         // Einige Daten initial setzen...
-        setProperty(CONTROL_KEY, Boolean.FALSE);
+        setProperty(DESTINATION_SIMULTAN_KEY, Boolean.valueOf(this.isDestinationSimultan));
+        setProperty(CONTROL_KEY, Boolean.valueOf(this.isControlled));
+        setProperty(CONTROL_MA_KEY, Boolean.valueOf(this.isMAControlled));
+        setProperty(CONTROL_MA_KEY, Boolean.valueOf(this.isMBControlled));
         setProperty(GUI_STATUS_KEY, GuiStatus.INIT);
     }
      
@@ -882,47 +942,91 @@ public class Model
             Object oldValue = this.dataMap.get(key); 
             this.dataMap.put(key, newValue);
             
-            if (Model.VALUE_MA_KEY.equals(key))
+            key_found:
             {
-                if (newValue instanceof BigDecimal)
+                if (Model.DESTINATION_SIMULTAN_KEY.equals(key))
                 {
-                    this.valueMA = (BigDecimal) newValue;
+                    if (newValue instanceof Boolean)
+                    {
+                        this.isDestinationSimultan = Boolean.TRUE.equals(newValue);
                     
-                    logger.debug("valueMA=" + this.valueMA.toString());
-                }    
-            }
-            
-            if (Model.VALUE_MB_KEY.equals(key))
-            {
-                if (newValue instanceof BigDecimal)
-                {
-                    this.valueMB = (BigDecimal) newValue;
-                    
-                    logger.debug("valueMB=" + this.valueMB.toString());
-                }    
-            }
-            
-            if (Model.CONTROL_KEY.equals(key))
-            {
-                if (newValue instanceof Boolean)
-                {
-                    this.isControlled = Boolean.TRUE.equals(newValue);
-                    
-                    logger.debug("isControlled=" + this.isControlled);
+                        logger.debug("isDestinationSimultan=" + this.isDestinationSimultan);
+                    }
+                    break key_found;
                 }
-            }
             
-            if (Model.ENHANCEMENT_KEY.equals(key))
-            {
-                if (newValue instanceof BigDecimal)
+                if (Model.VALUE_MA_KEY.equals(key))
                 {
-                    // Die Verstaerkung (enhancement) findet sich nicht im Model,
-                    // sondern im PositionController, daher Zugriff ueber 'Delegate'...
-                    setEnhancement((BigDecimal) newValue);
+                    if (newValue instanceof BigDecimal)
+                    {
+                        this.valueMA = (BigDecimal) newValue;
                     
-                    logger.debug("enhancement=" + getEnhancement().toString());
-                }    
-            }
+                        logger.debug("valueMA=" + this.valueMA.toString());
+                    }
+                    break key_found;
+                }
+            
+                if (Model.VALUE_MB_KEY.equals(key))
+                {
+                    if (newValue instanceof BigDecimal)
+                    {
+                        this.valueMB = (BigDecimal) newValue;
+                    
+                        logger.debug("valueMB=" + this.valueMB.toString());
+                    }
+                    break key_found;
+                }
+            
+                if (Model.CONTROL_KEY.equals(key))
+                {
+                    if (newValue instanceof Boolean)
+                    {
+                        this.isControlled = Boolean.TRUE.equals(newValue);
+                    
+                        logger.debug("isControlled=" + this.isControlled);
+                    }
+                    break key_found;
+                }
+            
+                if (Model.CONTROL_MA_KEY.equals(key))
+                {
+                    if (newValue instanceof Boolean)
+                    {
+                        this.isMAControlled = Boolean.TRUE.equals(newValue);
+                        
+                        this.positionController.setMAControlled(this.isMAControlled);
+                    
+                        logger.debug("isMAControlled=" + this.isMAControlled);
+                    }
+                    break key_found;
+                }
+
+                if (Model.CONTROL_MB_KEY.equals(key))
+                {
+                    if (newValue instanceof Boolean)
+                    {
+                        this.isMBControlled = Boolean.TRUE.equals(newValue);
+                        
+                        this.positionController.setMBControlled(this.isMBControlled);
+                    
+                        logger.debug("isMBControlled=" + this.isMBControlled);
+                    }
+                    break key_found;
+                }
+            
+                if (Model.ENHANCEMENT_KEY.equals(key))
+                {
+                    if (newValue instanceof BigDecimal)
+                    {
+                        // Die Verstaerkung (enhancement) findet sich nicht im Model,
+                        // sondern im PositionController, daher Zugriff ueber 'Delegate'...
+                        setEnhancement((BigDecimal) newValue);
+                    
+                        logger.debug("enhancement=" + getEnhancement().toString());
+                    }  
+                    break key_found;
+                }
+            } // end() key_found.
             
             ////////////////////////////////////////////////////////////////////////
             // Evtl. Kein Logging an dieser Stelle...
@@ -1040,9 +1144,22 @@ public class Model
         // Zustandsgroessen zuruecksetzen...
         doClear();
         
+        this.isDestinationSimultan = false;
+        setProperty(Model.DESTINATION_SIMULTAN_KEY, Boolean.valueOf(this.isDestinationSimultan));
+        
+        // isMAControlled, isMBControlled: Vgl. die Initialisierung im Controller
+        this.isMAControlled = true;
+        setProperty(Model.CONTROL_MA_KEY, Boolean.valueOf(this.isMAControlled));
+        this.isMBControlled = true;
+        setProperty(Model.CONTROL_MB_KEY, Boolean.valueOf(this.isMBControlled));
+        
         // isControlled: Mit Regelung... 
         this.isControlled = false;
         setProperty(Model.CONTROL_KEY, Boolean.valueOf(this.isControlled));
+        
+        // Sollwerte zuruecksetzen...
+        setProperty(Model.VALUE_MA_KEY, MX_VALUES[SELECTED_MX_VALUES_INDEX]);
+        setProperty(Model.VALUE_MB_KEY, MX_VALUES[SELECTED_MX_VALUES_INDEX]);
         
         setProperty(Model.DATA_KEY, new Data(this.counter, 
                                              this.cycleTime, 

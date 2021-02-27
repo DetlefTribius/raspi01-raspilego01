@@ -64,6 +64,16 @@ public class PositionController
     private BigDecimal enhancement;
     
     /**
+     * boolean isMAControlled - die Regelung wirkt auf den Motor A
+     */
+    private boolean isMAControlled;
+    
+    /**
+     * boolean isMBControlled - die Regelung wirkt auf den Motor B
+     */
+    private boolean isMBControlled;
+    
+    /**
      * wheelSteps - Anzahl der Impulse des Gebers pro Umdrehung
      */
     private final int wheelSteps;
@@ -100,7 +110,50 @@ public class PositionController
     }
     
     /**
+     * isMAControlled()
+     * @return the isMAControlled
+     */
+    public final boolean isMAControlled()
+    {
+        return isMAControlled;
+    }
+
+    /**
+     * setMAControlled(boolean isMAControlled)
+     * @param isMAControlled the isMAControlled to set
+     */
+    public final void setMAControlled(boolean isMAControlled)
+    {
+        this.isMAControlled = isMAControlled;
+    }
+
+    /**
+     * isMBControlled()
+     * @return the isMBControlled
+     */
+    public final boolean isMBControlled()
+    {
+        return isMBControlled;
+    }
+
+    /**
+     * setMBControlled(boolean isMBControlled)
+     * @param isMBControlled the isMBControlled to set
+     */
+    public final void setMBControlled(boolean isMBControlled)
+    {
+        this.isMBControlled = isMBControlled;
+    }
+
+    /**
      * doControl() - Regelalgorithmus...
+     * <p>
+     * Der Regelalgorithmus realisiert einen einfachen P-Regler der Lage. Die Verstaerkung
+     * ergibt sich zu (Verstaerkung an Oberflaeche) / (Impulse pro Umdrehung) * Lagedifferenz.
+     * Das Ergebnis (Reglerausgang) wird wahlweise zum Sollwert addiert oder subtrahiert.
+     * Soll keine Auswirkung auf einen Motor vorliegen (Checkbox nicht gesetzt), so eeinflusst
+     * die Reglerdifferenz nicht den entsprechenden Sollwert. 
+     * <p>
      * @return Output(output)
      */
     public Output doControl(BigDecimal valueMA, long numberMA, 
@@ -108,14 +161,14 @@ public class PositionController
     {
         // diffNumber: Lage-Differenz zwischen MA und MB...
         final long diffNumber = numberMA - numberMB;
-        
+        // Faktor P-Anteil (p_factor) ergibt sich aus der Verstaerkung an der Oberflaeche dividiert durch Impulse pro Umdrehung:
         final BigDecimal p_factor = this.enhancement.divide(BigDecimal.valueOf(this.wheelSteps), SCALE_INTERN, BigDecimal.ROUND_CEILING);
-        
+        // diffValue - Reglerausgangs
         final BigDecimal diffValue = BigDecimal.valueOf(diffNumber).multiply(p_factor).setScale(SCALE_OUTPUT, BigDecimal.ROUND_HALF_UP);
+        // Aufschalten des Reglerausgangs?
+        final BigDecimal outputMA = this.isMAControlled? valueMA.subtract(diffValue) : valueMA.setScale(SCALE_OUTPUT, BigDecimal.ROUND_HALF_UP);
         
-        final BigDecimal outputMA = valueMA.subtract(diffValue);
-        
-        final BigDecimal outputMB = valueMB.add(diffValue);
+        final BigDecimal outputMB = this.isMBControlled? valueMB.add(diffValue) : valueMB.setScale(SCALE_OUTPUT, BigDecimal.ROUND_HALF_UP);
         
         return new Output(diffValue, outputMA, outputMB);
     }
